@@ -1,6 +1,9 @@
+#include "App.h"
+
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdlib.h>
+
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -43,6 +46,7 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
     return program;
 }
 
+
 int main(void)
 {
     GLFWwindow* window;
@@ -51,9 +55,8 @@ int main(void)
     if (!glfwInit())
         return -1;
 
-    // glewInit();
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "open gl tutorial", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -62,37 +65,38 @@ int main(void)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+    glewInit();
 
     std::cout <<glGetString(GL_VERSION) << std::endl;
     std::cout << "shader version:" <<glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-    
+
     float positions[6] = {
         -0.5f,-0.5f,
         0.0f, 0.5f,
         0.5f,-0.5f
     };
 
-
     unsigned int buffer;
     glGenBuffers(1,&buffer);
     glBindBuffer(GL_ARRAY_BUFFER,buffer);
-    glBufferData(GL_ARRAY_BUFFER,6 * sizeof(float),positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(positions),positions, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,2,GL_FLOAT, GL_FALSE, sizeof(float) * 2,0);
 
+
     std::string vertexShader = 
-        "#version 120 core \n"
+        "#version 330 core \n"
         "\n"
         "layout(location = 0) in vec4 position;"
         "\n"
         "void main()\n"
         "{\n"
-        "  gl_position = position;\n"
+        "  gl_Position = position;\n"
         "}\n";
 
     std::string fragmentShader = 
-    "#version 120 core \n"
+    "#version 330 core \n"
     "\n"
     "layout(location = 0) out vec4 color;"
     "\n"
@@ -101,17 +105,17 @@ int main(void)
     "  color = vec4(1.0,0.0,0.0,1.0);\n"
     "}\n";
 
-
     unsigned int shader = CreateShader(vertexShader,fragmentShader);
     glUseProgram(shader);
-
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
+        glDrawArrays(GL_TRIANGLES,0,3);
+
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
