@@ -7,16 +7,20 @@
 #include <sstream>
 #include <fstream>
 
+#define ASSERT(x) if(!(x)) __builtin_debugtrap();
+
 
 static void GLClearError(){
     while(glGetError() != GL_NO_ERROR);
 }
 
-static void GLCheckError(){
+static bool GLLogCall(){
     while(GLenum error = glGetError())
     {
         std::cout<< "[OpenGL Error] (" << error << ")" << std::endl;
+        return false;
     }
+    return true;
 }
 
 struct ShaderProgramSource
@@ -114,7 +118,10 @@ int main(void)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
     glewInit();
+
+
 
     std::cout <<glGetString(GL_VERSION) << std::endl;
     std::cout << "shader version:" <<glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
@@ -140,15 +147,19 @@ int main(void)
 
     unsigned int ibo;
     glGenBuffers(1,&ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,6 * sizeof(unsigned int),indices, GL_STATIC_DRAW);
 
 
     ShaderProgramSource source = ParseShader("./res/shaders/Basic.shader");
-    // std::cout << source.VertexSource << std::endl;
-    // std::cout << source.FragmentSource << std::endl;
     unsigned int shader = CreateShader(source.VertexSource,source.FragmentSource);
     glUseProgram(shader);
+
+    int location  = glGetUniformLocation(shader,"u_Color");
+    glUniform4f(location, 0.2f,0.3f,0.8f,1.0f);
+
+    float r = 0.3f;
+    float increment = 0.05f;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -157,8 +168,16 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
         
         GLClearError();
+        glUniform4f(location,r,0.3f,0.8f,1.0f);
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,nullptr);
-        GLCheckError();
+
+        if(r > 1.0f)
+            increment = -0.05f;
+        if(r < 0.0f){
+            increment = 0.05f;
+        }
+        r += increment;
+        //ASSERT(GLLogCall());
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
